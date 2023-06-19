@@ -1,0 +1,5 @@
+@tailwind components;
+
+@layer components {
+    .button { @apply p-2 dark:text-white text-black text-center rounded font-bold }
+}

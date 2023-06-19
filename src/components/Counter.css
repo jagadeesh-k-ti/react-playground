@@ -1,6 +1,5 @@
+@import "./common.css";
 @tailwind components;
-
 @layer components {
     .count { @apply text-6xl m-4 }
-    .button { @apply p-4 m-2 text-white text-center rounded font-bold }
 }
