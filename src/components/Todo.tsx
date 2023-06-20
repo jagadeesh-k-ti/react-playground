@@ -12,7 +12,7 @@ type Action =
     | { type: "UPDATE" | "REMOVE"; id: string }
     | { type: "SET_FILTER"; fliter: Filter }
     | { type: "ADD"; title: string };
-type Todo = { id: string; title: string; completed: boolean };
+type Todo = Readonly<{ id: string; title: string; completed: boolean }>;
 type TodoAppState = { todos: Todo[]; filter: Filter };
 type TodoTaskProps = {
     todo: Todo;
@@ -36,11 +36,11 @@ function reducer(draft: Draft<TodoAppState>, action: Action) {
             const todo = draft.todos.find(t => t.id === action.id);
             invariant(todo);
             todo.completed = !todo.completed;
-            return draft;
+            break;
         }
         case "REMOVE": {
             draft.todos = draft.todos.filter(t => t.id !== action.id);
-            return draft;
+            break;
         }
         case "ADD": {
             draft.todos.unshift({
@@ -48,11 +48,11 @@ function reducer(draft: Draft<TodoAppState>, action: Action) {
                 title: action.title,
                 completed: false,
             });
-            return draft;
+            break;
         }
         case "SET_FILTER": {
             draft.filter = action.fliter;
-            return draft;
+            break;
         }
     }
 }
@@ -79,7 +79,7 @@ const AddTodo = ({ add }: { add: (title: string) => void }) => {
                     add(title);
                     setTitle("");
                 }}
-                className="button bg-slate-100 dark:bg-slate-600"
+                className="button bg-slate-100 disabled:opacity-30 dark:bg-slate-600"
             >
                 Add
             </button>
