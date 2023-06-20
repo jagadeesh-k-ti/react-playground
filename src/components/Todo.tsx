@@ -1,4 +1,5 @@
 import { useImmer, useImmerReducer } from "use-immer";
+import { useMemo } from "react";
 import "./common.css";
 import "./Todo.css";
 import { Draft } from "immer";
@@ -64,6 +65,7 @@ const AddTodo = ({ add }: { add: (title: string) => void }) => {
                 Title:
             </label>
             <input
+                placeholder="Task Title..."
                 className="rounded bg-slate-100 px-2 dark:bg-slate-600"
                 value={title}
                 onChange={e => setTitle(e.target.value)}
@@ -72,6 +74,7 @@ const AddTodo = ({ add }: { add: (title: string) => void }) => {
                 required
             />
             <button
+                disabled={title == ""}
                 onClick={() => {
                     add(title);
                     setTitle("");
@@ -87,7 +90,7 @@ const AddTodo = ({ add }: { add: (title: string) => void }) => {
 const TodoTask = (props: TodoTaskProps) => {
     const { id, title, completed } = props.todo;
     return (
-        <div className="mb-2 inline-flex rounded-sm bg-slate-100 p-4 text-xl dark:bg-slate-600">
+        <div className="task mb-2 inline-flex rounded-sm bg-slate-100 p-4 text-xl dark:bg-slate-600">
             <div className="inline-flex grow">
                 <button
                     aria-label={completed ? "completed" : "pending"}
@@ -97,13 +100,17 @@ const TodoTask = (props: TodoTaskProps) => {
                         completed ? "bg-green-600" : "dark:bg-slate-800"
                     )}
                 >
-                    {completed ? <i className="bi bi-check2-circle"></i> : ""}
+                    {completed ? (
+                        <i className="bi bi-check2-circle text-white"></i>
+                    ) : (
+                        ""
+                    )}
                 </button>
                 <span className="ml-4">{title}</span>
             </div>
             <div className="justify-end">
                 <button onClick={() => props.remove(id)} aria-label="remove">
-                    <i className="bi bi-trash3-fill"></i>
+                    <i className="bi bi-trash3-fill text-red-600"></i>
                 </button>
             </div>
         </div>
@@ -112,6 +119,13 @@ const TodoTask = (props: TodoTaskProps) => {
 
 export const TodoComponent = () => {
     const [state, dispatch] = useImmerReducer(reducer, initialState);
+    const filteredTodo = useMemo(
+        () =>
+            state.todos.filter(t =>
+                state.filter === "COMPLETED" ? t.completed : !t.completed
+            ),
+        [state]
+    );
     console.log(state.filter);
     return (
         <>
@@ -147,24 +161,18 @@ export const TodoComponent = () => {
                 <div className="mt-4 flex h-[70vh] flex-col overflow-y-scroll">
                     {/* map here */}
 
-                    {state.todos
-                        .filter(t =>
-                            state.filter === "COMPLETED"
-                                ? t.completed
-                                : !t.completed
-                        )
-                        .map(t => (
-                            <TodoTask
-                                key={t.id}
-                                todo={t}
-                                update={(id: string) =>
-                                    dispatch({ id: id, type: "UPDATE" })
-                                }
-                                remove={(id: string) =>
-                                    dispatch({ id: id, type: "REMOVE" })
-                                }
-                            />
-                        ))}
+                    {filteredTodo.map(t => (
+                        <TodoTask
+                            key={t.id}
+                            todo={t}
+                            update={(id: string) =>
+                                dispatch({ id: id, type: "UPDATE" })
+                            }
+                            remove={(id: string) =>
+                                dispatch({ id: id, type: "REMOVE" })
+                            }
+                        />
+                    ))}
                 </div>
                 <AddTodo
                     add={(title: string) =>

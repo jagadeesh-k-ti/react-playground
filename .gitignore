@@ -25,3 +25,6 @@ dist-ssr
 *.sw?
 
 !.vscode/settings.json
+/test-results/
+/playwright-report/
+/playwright/.cache/

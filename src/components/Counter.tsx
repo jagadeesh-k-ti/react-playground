@@ -5,7 +5,9 @@ export const Counter = () => {
     const [count, setCount] = useImmer(0);
     return (
         <div className="flex flex-col items-center justify-center p-4">
-            <h1 className="count">{count}</h1>
+            <h1 title="count" className="count">
+                {count}
+            </h1>
             <div>
                 <button
                     onClick={() => setCount(count + 1)}
