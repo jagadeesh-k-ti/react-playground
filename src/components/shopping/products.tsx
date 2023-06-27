@@ -1,11 +1,11 @@
-import { useAtom, useAtomValue } from "jotai";
-import { Product, badgeAtom, cartAtom } from "./store";
+import { useAtom } from "jotai";
+import { Product, cartAtom } from "./store";
 import { genProduct } from "./utils";
 import * as R from "remeda";
-import { Draft, produce } from "immer";
+import { produce } from "immer";
 
 const dummyProducts = R.pipe(
-    R.range(0, 14),
+    R.range(0, 15),
     R.map(() => genProduct())
 );
 
@@ -68,7 +68,6 @@ const ProductView = ({
 
 export const Products = () => {
     const [cart, setCart] = useAtom(cartAtom);
-    const count = useAtomValue(badgeAtom);
 
     const addHandler = (p: Product) => {
         setCart(
