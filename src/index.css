@@ -4,5 +4,5 @@
 @tailwind utilities;
 
 @layer base {
-    html { @apply dark:text-white bg-[#f0f6ff] dark:bg-gray-900 }
+    html, body { @apply dark:text-white bg-[#f0f6ff] dark:bg-gray-900 min-h-full }
 }

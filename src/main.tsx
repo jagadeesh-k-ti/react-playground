@@ -8,6 +8,7 @@ import { TodoComponent } from "./components/Todo.tsx";
 import { Shopping } from "./components/shopping/shopping.tsx";
 import { Cart } from "./components/shopping/cart.tsx";
 import { Products } from "./components/shopping/products.tsx";
+import { Datagrid } from "./components/Datagrid/Datagrid.tsx";
 
 const router = createBrowserRouter([
     { path: "/", element: <App /> },
@@ -18,6 +19,10 @@ const router = createBrowserRouter([
     {
         path: "/todo",
         element: <TodoComponent />,
+    },
+    {
+        path: "/datagrid",
+        element: <Datagrid />,
     },
     {
         path: "/shopping",
