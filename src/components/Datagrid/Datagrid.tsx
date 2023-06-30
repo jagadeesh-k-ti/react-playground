@@ -1,19 +1,18 @@
+import { useSearchParams } from "react-router-dom";
+import clsx from "clsx";
 import { StudentReport, genReports } from "./data";
-import "./Datagrid.css";
 import * as R from "remeda";
 import { useImmer, useImmerReducer } from "use-immer";
+import invariant from "tiny-invariant";
+import { useRef } from "react";
+import "./Datagrid.css";
 
-const reports = R.pipe(
-    R.range(0, 25),
-    R.map(() => genReports())
-);
-
-const getKeys = <T extends object>(obj: T) => {
-    return Object.keys(obj);
-};
-
+/* types */
 type order = "desc" | "asc";
-type GridDataType = Record<string, string | number | boolean>;
+type GridDataType = Record<string, string | number | boolean> & {
+    id: number | string;
+};
+type PageProps = { current: number; total: number; perpage: number };
 type GridState<T extends GridDataType> = {
     filtered: T[];
     original: T[];
@@ -25,14 +24,23 @@ type THeadState = {
 type Payload<K> =
     | { action: "search"; of: keyof K; by: string }
     | { action: "sort"; of: keyof K; by: order };
+/* END */
+
+/* utility */
+const getKeys = <T extends GridDataType>(data: T[]): (keyof T)[] => {
+    const first = data.at(0);
+    invariant(first);
+    return Object.keys(first);
+};
+/* END */
 
 function Reducer<T extends GridDataType>(
     state: GridState<T>,
     payload: Payload<T>
 ) {
+    console.log(payload);
     switch (payload.action) {
         case "search": {
-            console.log(payload);
             state.filtered = state.original.filter(p =>
                 p[payload.of]
                     .toString()
@@ -42,7 +50,6 @@ function Reducer<T extends GridDataType>(
             break;
         }
         case "sort": {
-            console.log(payload);
             state.filtered.sort((a, b) => {
                 const x = a[payload.of];
                 const y = b[payload.of];
@@ -63,26 +70,29 @@ function Reducer<T extends GridDataType>(
     }
 }
 
-const THead = <R extends GridDataType>({
+const THead = <T extends GridDataType>({
     title,
     dispatch,
 }: {
-    title: R[keyof R];
-    dispatch: (p: Payload<R>) => void;
+    title: keyof T;
+    dispatch: (p: Payload<T>) => void;
 }) => {
     const [state, setState] = useImmer<THeadState>({
         ordering: "asc",
         search: { toggle: false, text: "" },
     });
-    const searchIconClickHandler = () =>
+    const searchInputRef = useRef<HTMLInputElement>(null);
+    const searchIconClickHandler = () => {
         setState(draft => {
             draft.search.toggle = !draft.search.toggle;
         });
+        setTimeout(() => searchInputRef.current!.focus(), 100);
+    };
     const sortIconHandler = () => {
         const _t = state.ordering === "asc" ? "desc" : "asc";
         dispatch({
             action: "sort",
-            of: title as keyof R,
+            of: title as keyof T,
             by: _t,
         });
         setState(draft => {
@@ -96,7 +106,7 @@ const THead = <R extends GridDataType>({
         });
         dispatch({
             action: "search",
-            of: title as keyof R,
+            of: title as keyof T,
             by: text,
         });
     };
@@ -104,7 +114,7 @@ const THead = <R extends GridDataType>({
     return (
         <th className="border-1 mx-2 border-black bg-green-300 text-black">
             <span className="text-2xl">
-                {title}
+                {title as string}
                 <span className="ps-2 [&>i]:mx-2">
                     <i
                         onClick={searchIconClickHandler}
@@ -118,11 +128,14 @@ const THead = <R extends GridDataType>({
             </span>
             <div>
                 <input
-                    hidden={!state.search.toggle}
                     value={state.search.text}
                     onChange={ev => searchHandler(ev.target.value)}
                     type="text"
-                    className="m-2 rounded-sm ps-1"
+                    ref={searchInputRef}
+                    className={clsx(
+                        "m-2 rounded-sm ps-1",
+                        !state.search.toggle && "hidden"
+                    )}
                     placeholder="search..."
                 />
             </div>
@@ -138,35 +151,111 @@ const DataRow = <T extends string | number | boolean>({
     return (
         <tr>
             {data.map(d => (
-                <td>{d}</td>
+                <td key={d as string}>{d}</td>
             ))}
         </tr>
     );
 };
 
+const DatagridView = <T extends GridDataType>({
+    data,
+    dispatch,
+    pageprops,
+}: {
+    data: T[];
+    dispatch: (p: Payload<T>) => void;
+    pageprops: PageProps;
+}) => {
+    return (
+        <div className="my-4 flex justify-center">
+            <table className="table-auto">
+                <thead>
+                    <tr>
+                        {getKeys(data).map(h => (
+                            <THead
+                                key={h as string}
+                                title={h}
+                                dispatch={dispatch}
+                            />
+                        ))}
+                    </tr>
+                </thead>
+                <tbody>
+                    {data
+                        .filter(
+                            (_, i) =>
+                                i <= pageprops.current * pageprops.perpage &&
+                                i >=
+                                    pageprops.current * pageprops.perpage -
+                                        pageprops.perpage
+                        )
+                        .map(p => (
+                            <DataRow key={p.id} data={Object.values(p)} />
+                        ))}
+                </tbody>
+            </table>
+        </div>
+    );
+};
+
+const reports = R.pipe(
+    R.range(0, 100),
+    R.map(() => genReports())
+);
 const initialState = { filtered: reports, original: reports };
+
+const Pagination = ({
+    pageprops,
+    setPage,
+}: {
+    pageprops: PageProps;
+    setPage: (i: number) => void;
+}) => {
+    return (
+        <div className="flex justify-center gap-2 py-2 text-2xl">
+            {R.pipe(
+                R.range(1, pageprops.total / pageprops.perpage),
+                R.map(i => (
+                    <a
+                        className={clsx(
+                            "cursor-pointer",
+                            pageprops.current === i &&
+                                "text-orange-500 underline"
+                        )}
+                        onClick={() => setPage(i)}
+                    >
+                        {i}
+                    </a>
+                ))
+            )}
+        </div>
+    );
+};
 
 export const Datagrid = () => {
     const [state, dispatch] = useImmerReducer(
         Reducer<StudentReport>,
         initialState
     );
+    const [searchParams, setSearchParams] = useSearchParams({
+        page: "1",
+    });
+    const setPage = (i: number) => setSearchParams({ page: String(i) });
+    const page = searchParams.get("page") ?? "1";
+    const n_perpage = "5";
+    const pp = {
+        current: Number(page),
+        perpage: Number(n_perpage),
+        total: state.filtered.length,
+    };
     return (
-        <div className="my-4 flex justify-center">
-            <table className="table-auto">
-                <thead>
-                    <tr>
-                        {getKeys(state.filtered.at(0)!).map(h => (
-                            <THead key={h} title={h} dispatch={dispatch} />
-                        ))}
-                    </tr>
-                </thead>
-                <tbody>
-                    {state.filtered.map(p => (
-                        <DataRow key={p.id} data={Object.values(p)} />
-                    ))}
-                </tbody>
-            </table>
+        <div>
+            <DatagridView
+                pageprops={pp}
+                data={state.filtered}
+                dispatch={dispatch}
+            />
+            <Pagination pageprops={pp} setPage={setPage} />
         </div>
     );
 };
