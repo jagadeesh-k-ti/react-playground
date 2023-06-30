@@ -54,15 +54,16 @@ function Reducer<T extends GridDataType>(
                 const x = a[payload.of];
                 const y = b[payload.of];
                 if (typeof x === "string") {
-                    const _y = y.toString();
                     return payload.by === "asc"
-                        ? x.localeCompare(y.toString())
-                        : _y.localeCompare(x);
+                        ? x.localeCompare(String(y))
+                        : String(y).localeCompare(x);
                 } else if (typeof x === "number") {
-                    const _y = Number(y);
-                    return payload.by === "asc" ? x - _y : _y - x;
+                    return payload.by === "asc" ? x - Number(y) : Number(y) - x;
+                } else if (typeof x === "boolean") {
+                    return payload.by === "asc" ? (x ? 1 : -1) : y ? 1 : -1;
+                } else {
+                    return -1;
                 }
-                return -1;
             });
 
             break;
@@ -121,7 +122,12 @@ const THead = <T extends GridDataType>({
                         className="bi bi-search cursor-pointer"
                     ></i>
                     <i
-                        className="bi bi-sort-down cursor-pointer"
+                        className={clsx(
+                            "bi cursor-pointer",
+                            state.ordering === "asc"
+                                ? "bi-sort-down"
+                                : "bi-sort-up"
+                        )}
                         onClick={sortIconHandler}
                     ></i>
                 </span>
