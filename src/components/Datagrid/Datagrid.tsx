@@ -172,6 +172,9 @@ const DatagridView = <T extends GridDataType>({
     dispatch: (p: Payload<T>) => void;
     pageprops: PageProps;
 }) => {
+    const sliceStop = pageprops.current * pageprops.perpage;
+    const sliceStart = sliceStop - pageprops.perpage;
+    console.log(sliceStart, sliceStop);
     return (
         <div className="my-4 flex justify-center">
             <table className="table-auto">
@@ -187,17 +190,9 @@ const DatagridView = <T extends GridDataType>({
                     </tr>
                 </thead>
                 <tbody>
-                    {data
-                        .filter(
-                            (_, i) =>
-                                i <= pageprops.current * pageprops.perpage &&
-                                i >=
-                                    pageprops.current * pageprops.perpage -
-                                        pageprops.perpage
-                        )
-                        .map(p => (
-                            <DataRow key={p.id} data={Object.values(p)} />
-                        ))}
+                    {data.slice(sliceStart, sliceStop).map(p => (
+                        <DataRow key={p.id} data={Object.values(p)} />
+                    ))}
                 </tbody>
             </table>
         </div>
@@ -205,7 +200,7 @@ const DatagridView = <T extends GridDataType>({
 };
 
 const reports = R.pipe(
-    R.range(0, 100),
+    R.range(0, 98),
     R.map(() => genReports())
 );
 const initialState = { filtered: reports, original: reports };
@@ -220,7 +215,7 @@ const Pagination = ({
     return (
         <div className="flex justify-center gap-2 py-2 text-2xl">
             {R.pipe(
-                R.range(1, pageprops.total / pageprops.perpage),
+                R.range(1, Math.ceil(pageprops.total / pageprops.perpage) + 1),
                 R.map(i => (
                     <a
                         className={clsx(
