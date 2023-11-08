@@ -8,7 +8,10 @@ import { TodoComponent } from "./components/Todo.tsx";
 import { Shopping } from "./components/shopping/shopping.tsx";
 import { Cart } from "./components/shopping/cart.tsx";
 import { Products } from "./components/shopping/products.tsx";
+import { TodoQueryComponent } from "./components/Query/todo.tsx";
 import { Datagrid } from "./components/Datagrid/Datagrid.tsx";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 const router = createBrowserRouter([
     { path: "/", element: <App /> },
@@ -23,6 +26,15 @@ const router = createBrowserRouter([
     {
         path: "/datagrid",
         element: <Datagrid />,
+    },
+    {
+        path: "/query",
+        element: (
+            <>
+                <TodoQueryComponent />
+                <ReactQueryDevtools />
+            </>
+        ),
     },
     {
         path: "/shopping",
@@ -40,8 +52,12 @@ const router = createBrowserRouter([
     },
 ]);
 
+const queryClient = new QueryClient();
+
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <React.StrictMode>
-        <RouterProvider router={router}></RouterProvider>
+        <QueryClientProvider client={queryClient}>
+            <RouterProvider router={router}></RouterProvider>
+        </QueryClientProvider>
     </React.StrictMode>
 );

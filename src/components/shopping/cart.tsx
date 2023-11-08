@@ -38,5 +38,7 @@ export const Cart = () => {
     const items = useAtomValue(cartAtom);
     if (items.length > 0) {
         return <CartView items={items} />;
+    } else {
+        return <></>;
     }
 };
